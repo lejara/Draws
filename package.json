@@ -1,0 +1,26 @@
+{
+  "name": "draws",
+  "version": "1.0.0",
+  "description": "A drawing app",
+  "main": "index.html",
+  "scripts": {
+    "sass:index": "sass scss/index.scss dist/css/index.css && npx postcss dist/css/index.css --use autoprefixer -d dist/css/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lejara/Draws.git"
+  },
+  "author": "lejara",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/lejara/Draws/issues"
+  },
+  "homepage": "https://github.com/lejara/Draws#readme",
+  "dependencies": {
+    "@popperjs/core": "^2.6.0",
+    "autoprefixer": "^10.2.3",
+    "bootstrap": "^4.6.0",
+    "postcss": "^8.2.4",
+    "postcss-cli": "^8.3.1"
+  }
+}

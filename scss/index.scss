@@ -1,0 +1,50 @@
+$body-bg: #1F1F23;
+$body-color: rgba(255, 255, 255, 0.904);
+$primary: white;
+$secondary: #2e1d528a;
+$tri_colour: #2b274b;
+$input-bg: $tri_colour;
+$input-color: white;
+$custom-range-track-bg: $tri_colour;
+$enable-responsive-font-sizes: true;
+$modal-content-bg: #1F1F23;
+$modal-content-border-color: rgb(36, 36, 36);
+$modal-header-border-color: rgb(61, 61, 61);
+$close-color: rgb(121, 120, 120);
+@import "../node_modules/bootstrap/scss/bootstrap";
+
+
+// Debug: layout outline
+.my-container {
+    border: 1px solid green;
+}
+.my-row {
+    border: 1px solid red;f
+}
+.my_col {
+    border: 1px dotted blue;
+}
+
+*, *:before, *:after {
+    box-sizing: inherit;
+  }
+
+html {
+    box-sizing: border-box;
+    font-family: sans-serif;
+}
+canvas {
+    background: white;
+}
+
+#paint-app {
+    margin-left: auto;
+    margin-right: auto;
+    width: 700px;
+}
+
+/* For any shape tools that need a live preview */
+.placeholder {
+    position:absolute;
+    z-index:999;
+}
