@@ -6,14 +6,16 @@
  * 
  ***********************************************************************/
 
+//TODO: try to make strokes smoother
+
 var canvus_Width = 700; // Note: make sure to update css width in paint-app
 var canvus_height = 400;
-
+var cx;
 // the core of the program; appends the paint interface to the
 // DOM element given as an argument (parent)
 function createPaint(parent) {
     var canvas = elt('canvas', {width: canvus_Width, height: canvus_height, style: "cursor: crosshair;"});
-    var cx = canvas.getContext('2d');
+    cx = canvas.getContext('2d');
     var toolbar = elt('div', {class: 'toolbar'});
     
     // calls the every function in controls, passing in context,
@@ -106,14 +108,22 @@ function createPaint(parent) {
   // holds static methods to initialize the various controls;
   // Object.create() is used to create a truly empty object
   var controls = Object.create(null);
-  
+
   controls.tool = function(cx) {
-    var select = elt('select');
-    
+    var select = elt('div');
+    var labels_class = ['fas fa-paint-brush', 'fas fa-eraser', 'fad fa-eraser', 'fas fa-fill-drip']
     // populate the tools
-    for (var name in tools)
-      select.appendChild(elt('option', null, name));
-    
+    var ctr = 0;
+    for (var name in tools){
+      if(ctr === 0){
+        select.appendChild(elt('input', {class: 'tools_radio', type: 'radio', id: (name+ctr), name: "tools_radio", value: name, checked: 'checked'}, name));
+      }else{
+        select.appendChild(elt('input', {class: 'tools_radio', type: 'radio', id: (name+ctr), name: "tools_radio", value: name}, name));
+      }
+      select.appendChild(elt('label', {for: (name+ctr)}, elt('i', {class: labels_class[ctr]})))
+      ctr++;
+    }
+      
     // calls the particular method associated with the current tool
     cx.canvas.addEventListener('mousedown', function(event) {
       
@@ -122,7 +132,16 @@ function createPaint(parent) {
         
         // the event needs to be passed to the method to determine
         // what the mouse is doing and where it is
-        tools[select.value](event, cx);
+        
+        var selected_value;
+        var tools_radios =  document.querySelectorAll('input[name="tools_radio"]');
+        for(const tool_r of tools_radios){
+          if(tool_r.checked){
+            selected_value = tool_r.value;
+            break;
+          }
+        }
+        tools[selected_value](event, cx);
         // don't select when user is clicking and dragging
         event.preventDefault();
       }
@@ -133,22 +152,25 @@ function createPaint(parent) {
   
   // color module
   controls.color = function(cx) {
-    var input = elt('input', {type: 'color'});
     
-    // on change, set the new color style for fill and stroke
-    input.addEventListener('change', function() {
-      cx.fillStyle = input.value;
-      cx.strokeStyle = input.value;
-    });
-    return elt('span', null, 'Color: ', input);
+    var c_box_black = elt('div', {class: 'col-1 colour_box', id: 'c_black', style: 'background-color:#000000', 'data-color': '#000000', onclick: 'colour_box.call(this);'});
+    var c_box_white = elt('div', {class: 'col-1 colour_box', id: 'c_black', style: 'background-color:#FFFFFF', 'data-color': '#FFFFFF', onclick: 'colour_box.call(this);'});
+    var c_box_red = elt('div', {class: 'col-1 colour_box', id: 'c_black', style: 'background-color:#ff0000', 'data-color': '#ff0000', onclick: 'colour_box.call(this);'});
+    var c_box_blue = elt('div', {class: 'col-1 colour_box', id: 'c_black', style: 'background-color:#0000ff', 'data-color': '#0000ff', onclick: 'colour_box.call(this);'});
+
+    return elt('span', null, 'Color: ', c_box_black, c_box_white, c_box_red, c_box_blue);
   };
+
+  var colour_box = function(){
+    cx.fillStyle = this.dataset.color;
+    cx.strokeStyle = this.dataset.color;
+  }
 
   //Erase All module
   controls.allErase = function(cx){
     var button = elt('button');
 
     button.addEventListener("click", function(){
-        console.log("RAN");
         cx.globalCompositeOperation = 'destination-out';
         cx.fillRect(0, 0, canvus_Width, canvus_height);
         cx.globalCompositeOperation = 'source-over';
@@ -162,13 +184,13 @@ function createPaint(parent) {
     var select = elt('select');
     
     // various brush sizes
-    var sizes = [1, 2, 3, 5, 8, 12, 25, 35, 50, 75, 100];
+    var sizes = [3, 5, 8, 12, 40];
     
     // build up a select group of size options
     sizes.forEach(function(size) {
       select.appendChild(elt('option', {value: size}, size + ' pixels'));
     });
-    
+    cx.lineWidth = sizes[0];
     // on change, set the new stroke thickness
     select.addEventListener('change', function() {
       cx.lineWidth = select.value;
@@ -176,59 +198,6 @@ function createPaint(parent) {
     return elt('span', null, 'Brush size: ', select);
   };
   
-  // save
-//   controls.save = function(cx) {
-//     // MUST open in a new window because of iframe security stuff
-//     var link = elt('a', {href: '/', target: '_blank'}, 'Save');
-//     function update() {
-//       try {
-//         link.href = cx.canvas.toDataURL();
-//       } catch(e) {
-//         // some browsers choke on big data URLs
-        
-//         // also, if the server response doesn't include a header that tells the browser it
-//         // can be used on other domains, the script won't be able to look at it;
-//         // this is in order to prevent private information from leaking to a script;
-//         // pixel data, data URL or otherwise, cannot be extracted from a "tainted canvas"
-//         // and a SecurityError is thrown
-//         if (e instanceof SecurityError)
-//           link.href = 'javascript:alert(' + 
-//             JSON.stringify('Can\'t save: ' + e.toString()) + ')';
-//         else
-//           window.alert("Nope.");
-//           throw e;
-//       }
-//     }
-//     link.addEventListener('mouseover', update);
-//     link.addEventListener('focus', update);
-//     return link;
-//   };
-  
-  // open a file
-//   controls.openFile = function(cx) {
-//     var input = elt('input', {type: 'file'});
-//     input.addEventListener('change', function() {
-//       if (input.files.length == 0) return;
-//       var reader = new FileReader();
-//       reader.addEventListener('load', function() {
-//         loadImageURL(cx, reader.result);
-//       });
-//       reader.readAsDataURL(input.files[0]);
-//     });
-//     return elt('div', null, 'Open file: ', input);
-//   };
-  
-  // open a URL
-//   controls.openURL = function(cx) {
-//     var input = elt('input', {type: 'text'});
-//     var form = elt('form', null, 'Open URL: ', input, 
-//                    elt('button', {type: 'submit'}, 'load'));
-//     form.addEventListener('submit', function(event) {
-//       event.preventDefault();
-//       loadImageURL(cx, form.querySelector('input').value);
-//     });
-//     return form;
-//   };
   
   /************************************************************************
    * tools
@@ -275,37 +244,7 @@ function createPaint(parent) {
     });
   };
   
-  // text tool
-  tools.Text = function(event, cx) {
-    var text = prompt('Text:', '');
-    if (text) {
-      var pos = relativePos(event, cx.canvas);
-      // for simplicity, text size is brush size, locked to sans-serif
-      cx.font = Math.max(7, cx.lineWidth) + 'px sans-serif';
-      cx.fillText(text, pos.x, pos.y);
-    }
-  }
-  
-  // spray paint tool
-  tools.Spray = function(event, cx) {
-    var radius = cx.lineWidth / 2;
-    var area = radius * radius * Math.PI;
-    var dotsPerTick = Math.ceil(area / 30);
-    
-    var currentPos = relativePos(event, cx.canvas);
-    var spray = setInterval(function() {
-      for (var i = 0; i < dotsPerTick; i++) {
-        var offset = randomPointInRadius(radius);
-        cx.fillRect(currentPos.x + offset.x, 
-                    currentPos.y + offset.y, 1, 1);
-      }
-    }, 25);
-    trackDrag(function(event) {
-      currentPos = relativePos(event, cx.canvas);
-    }, function() {
-      clearInterval(spray);
-    });
-  };
+
   
   /************************************************************************
    * exercises
@@ -374,44 +313,6 @@ function createPaint(parent) {
     });
   };
   
-  /**
-   * allows the user to load the color of a specific pixel
-   *
-   * @param {Object} event - mousedown event (specifically left button)
-   * @param {Object} cx - the canvas 2d context object
-   */
-  // TODO: rewrite with pixel object
-  tools['Pick Color'] = function(event, cx) {
-    try {
-      var colorPos = relativePos(event, cx.canvas),
-          // returns an array [r, g, b, opacity];
-          imageData = cx.getImageData(colorPos.x, colorPos.y, 1, 1),
-          colorVals = imageData.data,
-          color = '';
-      
-      // build the color
-      color += 'rgb(';
-      
-      // only need first three args
-      for (var i = 0; i < colorVals.length - 1; i++) {
-        color += colorVals[i];
-        
-        // only need two commas
-        if (i < 2)
-          color += ',';
-      }
-      color += ')';
-      
-      cx.fillStyle = color;
-      cx.strokeStyle = color;
-      
-    } catch(e) {
-      if (e instanceof SecurityError)
-          alert('Whoops! Looks like you don\'t have permission to do that!');
-        else
-          throw e;
-    }
-  };
   
   // helpers for flood fill
   
@@ -490,15 +391,3 @@ function createPaint(parent) {
     createPaint(appDiv);
 
   })
-
-  
-  /************************************************************************
-   * resources
-   *
-   * Canvas Rendering Context 2D API
-   * https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D
-   *
-   * Eloquent JavaScript Ch 19, Project: A Paint Program
-   * http://eloquentjavascript.net/19_paint.html
-   ***********************************************************************/
-  

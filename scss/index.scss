@@ -19,7 +19,7 @@ $close-color: rgb(121, 120, 120);
     border: 1px solid green;
 }
 .my-row {
-    border: 1px solid red;f
+    border: 1px solid red;
 }
 .my_col {
     border: 1px dotted blue;
@@ -47,4 +47,27 @@ canvas {
 .placeholder {
     position:absolute;
     z-index:999;
+}
+
+.colour_box{
+    width:24px;
+    height: 24px;
+    display: inline;
+}
+
+//Colour Buttons
+
+// .colour_box:hover{
+
+// }
+
+//Radio Adjustments
+input.tools_radio{
+    visibility:hidden;
+}
+label {
+    cursor: pointer;
+}
+input:checked + label {
+    background: red;
 }
