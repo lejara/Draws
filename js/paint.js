@@ -110,7 +110,7 @@ function createPaint(parent) {
   var controls = Object.create(null);
 
   controls.tool = function(cx) {
-    var select = elt('div');
+    var select = elt('div', {style: 'font-size: 1.7rem;'});
     var labels_class = ['fas fa-paint-brush', 'fas fa-eraser', 'fad fa-eraser', 'fas fa-fill-drip']
     // populate the tools
     var ctr = 0;
@@ -120,7 +120,7 @@ function createPaint(parent) {
       }else{
         select.appendChild(elt('input', {class: 'tools_radio', type: 'radio', id: (name+ctr), name: "tools_radio", value: name}, name));
       }
-      select.appendChild(elt('label', {for: (name+ctr)}, elt('i', {class: labels_class[ctr]})))
+      select.appendChild(elt('label', {class: 'tools_radio', for: (name+ctr)}, elt('i', {class: labels_class[ctr]})))
       ctr++;
     }
       
@@ -147,7 +147,7 @@ function createPaint(parent) {
       }
     });
     
-    return elt('span', null, 'Tool: ', select);
+    return elt('span', null, select);
   };
   
   // color module
@@ -158,7 +158,7 @@ function createPaint(parent) {
     var c_box_red = elt('div', {class: 'col-1 colour_box', id: 'c_black', style: 'background-color:#ff0000', 'data-color': '#ff0000', onclick: 'colour_box.call(this);'});
     var c_box_blue = elt('div', {class: 'col-1 colour_box', id: 'c_black', style: 'background-color:#0000ff', 'data-color': '#0000ff', onclick: 'colour_box.call(this);'});
 
-    return elt('span', null, 'Color: ', c_box_black, c_box_white, c_box_red, c_box_blue);
+    return elt('span', null, c_box_black, c_box_white, c_box_red, c_box_blue);
   };
 
   var colour_box = function(){
@@ -168,7 +168,7 @@ function createPaint(parent) {
 
   //Erase All module
   controls.allErase = function(cx){
-    var button = elt('button');
+    var button = elt('i', {class: 'erase-all fas fa-trash'});
 
     button.addEventListener("click", function(){
         cx.globalCompositeOperation = 'destination-out';
@@ -176,26 +176,40 @@ function createPaint(parent) {
         cx.globalCompositeOperation = 'source-over';
     })
 
-    return elt('span', null, 'Erase All: ', button);
+    return elt('span', null, button);
   }
   
   // brush size module
   controls.brushSize = function(cx) {
-    var select = elt('select');
+    var select = elt('div', {style: 'font-size: 0.6rem;'});
     
     // various brush sizes
-    var sizes = [3, 5, 8, 12, 40];
-    
+    var sizes = [4, 8, 12, 30];
+    var labels_class = ['fas fa-circle fa-sm', 'fas fa-circle fa-lg', 'fas fa-circle fa-2x', 'fas fa-circle fa-3x']
     // build up a select group of size options
+    var ctr = 0;
     sizes.forEach(function(size) {
-      select.appendChild(elt('option', {value: size}, size + ' pixels'));
+      // select.appendChild(elt('option', {value: size}, size + ' pixels'));
+      var element;
+      if(ctr === 0){
+        element = elt('input', {class: 'size_radio', type: 'radio', id: ("size"+size+ctr), name: ("size"), value: size, checked: 'checked'})
+        select.appendChild(element);
+      }else{
+        element = elt('input', {class: 'size_radio', type: 'radio', id: ("size"+size+ctr), name: ("size"), value: size})
+        select.appendChild(element);
+      }
+      // on change, set the new stroke thickness
+      element.addEventListener('click', function(event) {
+        cx.lineWidth = event.target.value;
+      });
+
+      select.appendChild(elt('label', {class: 'size_radio', for: ("size"+size+ctr)}, elt('i', {class: labels_class[ctr]})))
+      ctr++;
     });
+
     cx.lineWidth = sizes[0];
-    // on change, set the new stroke thickness
-    select.addEventListener('change', function() {
-      cx.lineWidth = select.value;
-    });
-    return elt('span', null, 'Brush size: ', select);
+
+    return elt('span', null, select);
   };
   
   
