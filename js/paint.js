@@ -8,13 +8,13 @@
 
 //TODO: try to make strokes smoother
 
-var canvus_Width = 700; // Note: make sure to update css width in paint-app
-var canvus_height = 400;
+var canvas_Width = 700; // Note: make sure to update css width in paint-app
+var canvas_Height = 400;
 var cx;
 // the core of the program; appends the paint interface to the
 // DOM element given as an argument (parent)
 function createPaint(parent) {
-    var canvas = elt('canvas', {width: canvus_Width, height: canvus_height, style: "cursor: crosshair;"});
+    var canvas = elt('canvas', {width: canvas_Width, height: canvas_Height, style: "cursor: crosshair;"});
     cx = canvas.getContext('2d');
     var toolbar = elt('div', {class: 'toolbar'});
     
@@ -172,7 +172,7 @@ function createPaint(parent) {
 
     button.addEventListener("click", function(){
         cx.globalCompositeOperation = 'destination-out';
-        cx.fillRect(0, 0, canvus_Width, canvus_height);
+        cx.fillRect(0, 0, canvas_Width, canvas_Height);
         cx.globalCompositeOperation = 'source-over';
     })
 
@@ -364,38 +364,125 @@ function createPaint(parent) {
   /**
    * paints all adjacent matching pixels
    */
-  tools["Flood Fill"] = function(event, cx) {
-    var imageData = cx.getImageData(0, 0, cx.canvas.width, cx.canvas.height),
-        // get sample point at current position, {x: int, y: int}
-            sample = relativePos(event, cx.canvas),
-        isPainted = new Array(imageData.width * imageData.height),
-        toPaint = [sample];
+  // tools["Flood Fill"] = function(event, cx) {
+  //   var imageData = cx.getImageData(0, 0, cx.canvas.width, cx.canvas.height),
+  //       // get sample point at current position, {x: int, y: int}
+  //           sample = relativePos(event, cx.canvas),
+  //       isPainted = new Array(imageData.width * imageData.height),
+  //       toPaint = [sample];
     
-    // while toPaint.length > 0
-    while(toPaint.length) {
-      // current point to check
-      var current = toPaint.pop(),
-          id = current.x + current.y * imageData.width;
+  //   // while toPaint.length > 0
+  //   while(toPaint.length) {
+  //     // current point to check
+  //     var current = toPaint.pop(),
+  //         id = current.x + current.y * imageData.width;
       
-      // check if current has already been painted
-      if (isPainted[id]) continue;
-      else {
+  //     // check if current has already been painted
+  //     if (isPainted[id]) continue;
+  //     else {
         
-        // if it hasn't, paint current and set isPainted to true
-        cx.fillRect(current.x, current.y, 1, 1);
-        isPainted[id] = true;
-      }
+  //       // if it hasn't, paint current and set isPainted to true
+  //       cx.fillRect(current.x, current.y, 1, 1);
+  //       isPainted[id] = true;
+  //     }
       
-      // for every neighbor (new function)
-      forEachNeighbor(current, function(neighbor) {
-        if (neighbor.x >= 0 && neighbor.x < imageData.width &&
-            neighbor.y >= 0 && neighbor.y < imageData.height &&
-            isSameColor(imageData, sample, neighbor)) {
-          toPaint.push(neighbor);
-        }
-      });
+  //     // for every neighbor (new function)
+  //     forEachNeighbor(current, function(neighbor) {
+  //       if (neighbor.x >= 0 && neighbor.x < imageData.width &&
+  //           neighbor.y >= 0 && neighbor.y < imageData.height &&
+  //           isSameColor(imageData, sample, neighbor)) {
+  //         toPaint.push(neighbor);
+  //       }
+  //     });
+  //   }
+  // };
+
+//Flood fill
+tools["Flood Fill"] = function(event, cx){
+  var sample = relativePos(event, cx.canvas);
+  var colorLayerData = cx.getImageData(0, 0, cx.canvas.width, cx.canvas.height);
+
+  var startX = sample.x;
+  var startY = sample.y;
+
+  var pixelStack = [[startX, startY]];
+  var drawingBoundTop = 11; //TODO: why?
+
+  while(pixelStack.length)
+  {
+    var newPos, x, y, pixelPos, reachLeft, reachRight;
+    newPos = pixelStack.pop();
+    x = newPos[0];
+    y = newPos[1];
+    
+    pixelPos = (y*canvas_Width + x) * 4;
+    while(y-- >= drawingBoundTop && matchStartColor(pixelPos))
+    {
+      pixelPos -= canvas_Width * 4;
     }
-  };
+    pixelPos += canvas_Width * 4;
+    ++y;
+    reachLeft = false;
+    reachRight = false;
+    while(y++ < canvas_Height-1 && matchStartColor(pixelPos))
+    {
+      colorPixel(pixelPos);
+  
+      if(x > 0)
+      {
+        if(matchStartColor(pixelPos - 4))
+        {
+          if(!reachLeft){
+            pixelStack.push([x - 1, y]);
+            reachLeft = true;
+          }
+        }
+        else if(reachLeft)
+        {
+          reachLeft = false;
+        }
+      }
+    
+      if(x < canvas_Width-1)
+      {
+        if(matchStartColor(pixelPos + 4))
+        {
+          if(!reachRight)
+          {
+            pixelStack.push([x + 1, y]);
+            reachRight = true;
+          }
+        }
+        else if(reachRight)
+        {
+          reachRight = false;
+        }
+      }
+        
+      pixelPos += canvas_Width * 4;
+    }
+  }
+  cx.putImageData(colorLayerData, 0, 0);
+    
+  function matchStartColor(pixelPos)
+  {
+    var r = colorLayerData.data[pixelPos];	
+    var g = colorLayerData.data[pixelPos+1];	
+    var b = colorLayerData.data[pixelPos+2];
+  
+    return (r == startR && g == startG && b == startB);
+  }
+  
+  function colorPixel(pixelPos)
+  {
+    console.log("ran")
+    colorLayerData.data[pixelPos] = 255;
+    colorLayerData.data[pixelPos + 1] = 0;
+    colorLayerData.data[pixelPos + 2] = 0;
+    colorLayerData.data[pixelPos + 3] = a !== undefined ? a : 255;
+  }
+
+}
   
   // initialize the app
 
